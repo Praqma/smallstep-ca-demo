@@ -1,0 +1,20 @@
+version: "3.3"
+services:
+  step-ca:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: "praqma/step-ca:${VERSION:-latest}"
+    container_name: "step-ca"
+    environment:
+      - DNS_NAMES=${DNS_NAMES:-localhost}
+      - DEFAULT_CERT_VALIDITY=${DEFAULT_CERT_VALIDITY:-720h}
+      - MAX_CERT_VALIDITY=${MAX_CERT_VALIDITY:-2160h}
+    ports:
+      - "8443:8443"
+    volumes:
+      - step:/home/step
+    restart: unless-stopped
+    stop_grace_period: 30s
+volumes: 
+  step: {}
