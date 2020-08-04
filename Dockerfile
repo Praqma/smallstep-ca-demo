@@ -1,20 +1,25 @@
-FROM smallstep/step-ca:0.14.4 AS ca
+ARG VERSION
 
-FROM smallstep/step-cli:0.14.4
+FROM smallstep/step-ca:$VERSION
 
-# We need root access to bind port 443
 USER root
 
 RUN apk update --no-cache && \
-    apk add jq
+    apk add jq libcap
 
 ENV CONFIG_FILE="/home/step/config/ca.json"
 ENV PASSWORD_FILE="/home/step/secrets/password"
 
 COPY entrypoint.sh /usr/local/src/entrypoint.sh
 
-COPY --chown=step:step --from=ca /usr/local/bin/step-ca /usr/local/bin/step-ca
+RUN chown step:step /usr/local/src/entrypoint.sh && \
+    chmod 700 /usr/local/src/entrypoint.sh
+
+RUN chown step:step /usr/local/bin/step-ca && \
+    chown step:step /usr/local/bin/step && \
+    chmod 700 /usr/local/bin/step-ca && \
+    chmod 700 /usr/local/bin/step
+
+USER step
 
 ENTRYPOINT ["/usr/local/src/entrypoint.sh"]
-
-CMD exec /bin/sh -c "/usr/local/bin/step-ca --password-file $PASSWORD_FILE $CONFIG_FILE"

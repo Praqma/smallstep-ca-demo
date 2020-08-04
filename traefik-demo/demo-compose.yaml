@@ -1,0 +1,51 @@
+version: "3.3"
+services:
+  traefik:
+    network_mode: "host"
+    image: "traefik:v2.2.8"
+    container_name: "traefik"
+    command:
+      - "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.caserver=https://internalCA.thedukedk.net:8443/acme/acme/directory"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.myresolver.acme.email=postmaster@thedukedk.net"
+      - "--certificatesresolvers.myresolver.acme.storage=acme.json"
+    restart: unless-stopped
+    stop_grace_period: 30s
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # The root and intermediate certs should be distributed by ITOPS to all computers trust store.
+      - "/etc/pki/ca-trust/source/anchors:/etc/ssl/certs/:ro"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    environment:
+      - LEGO_CA_CERTIFICATES=/etc/ssl/certs/intermediate_ca.crt # Using the intermediate cert from the mounted hosts trust store.
+  hello-world:
+    image: praqma/hello-world:spring-boot-${HELLOWORLD_VERSION}
+    container_name: "hello-world"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.middlewares.hello-redirect-websecure.redirectscheme.scheme=https"
+      # Web
+      - "traefik.http.routers.router1.middlewares=hello-redirect-websecure"
+      - "traefik.http.routers.router1.rule=Host(`$SERVER_PROXY_NAME`)"
+      - "traefik.http.routers.router1.entrypoints=web"
+      - "traefik.http.routers.router1.service=hello-web"
+      - "traefik.http.services.hello-web.loadbalancer.server.port=8085"
+      # Web Secure
+      - "traefik.http.routers.router2.rule=Host(`$SERVER_PROXY_NAME`)"
+      - "traefik.http.routers.router2.entrypoints=websecure"
+      - "traefik.http.routers.router2.service=hello-websecure"
+      - "traefik.http.routers.router2.tls=true"
+      - "traefik.http.routers.router2.tls.certresolver=myresolver"
+      - "traefik.http.services.hello-websecure.loadbalancer.server.port=8085"
+    environment:
+      - HELLOWORLD_VERSION=${HELLOWORLD_VERSION}

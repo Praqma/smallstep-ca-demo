@@ -1,9 +1,12 @@
 version: "3.3"
 services:
   step-ca:
+    network_mode: "host"
     build:
       context: .
       dockerfile: Dockerfile
+      args: 
+        VERSION: ${VERSION}
     image: "praqma/step-ca:${VERSION:-latest}"
     container_name: "step-ca"
     environment:
