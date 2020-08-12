@@ -32,8 +32,3 @@ fi
 
 exec /bin/sh -c "/usr/local/bin/step-ca --password-file $PASSWORD_FILE $CONFIG_FILE"
 
-# wait forever
-while true
-do
-  tail -f /dev/null & wait ${!}
-done
