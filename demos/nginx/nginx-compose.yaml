@@ -1,0 +1,30 @@
+version: "3.3"
+services:
+  nginx:
+    network_mode: "host"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: "praqma/step-nginx-1.19.2:1.0.0"
+    container_name: "nginx"
+    environment:
+      - SERVER_PROXY_NAME=${SERVER_PROXY_NAME}
+      - CERT_AUTH=${CERT_AUTH:-localhost}
+      - CERT_AUTH_PORT=${CERT_AUTH_PORT:-8443}
+      - CERT_AUTH_PROVISIONER=${CERT_AUTH_PROVISIONER:-acme}
+      - FINGERPRINT=${FINGERPRINT}
+    volumes:
+      - certs:/acme-certificates
+    ports:
+      - 80:80
+      - 443:443
+  hello-world:
+    network_mode: "host"
+    image: praqma/hello-world:spring-boot-${HELLOWORLD_VERSION}
+    container_name: "hello-world"
+    environment:
+        - HELLOWORLD_VERSION=${HELLOWORLD_VERSION}
+    ports:
+      - 8085:8085
+volumes:
+  certs: {}
