@@ -2,7 +2,10 @@ version: "3.3"
 services:
   traefik:
     network_mode: "host"
-    image: "traefik:v2.2.8"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: "praqma/step-traefik-v2.2.8:1.0.0"
     container_name: "traefik"
     command:
       - "--log.level=DEBUG"
@@ -20,14 +23,16 @@ services:
     stop_grace_period: 30s
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      # The root and intermediate certs should be distributed by ITOPS to all computers trust store.
-      - "/etc/pki/ca-trust/source/anchors:/etc/ssl/certs/:ro"
     ports:
       - "80:80"
       - "443:443"
       - "8080:8080"
     environment:
-      - LEGO_CA_CERTIFICATES=/etc/ssl/certs/intermediate_ca.crt # Using the intermediate cert from the mounted hosts trust store.
+      - LEGO_CA_CERTIFICATES=/root/.step/certs/root_ca.crt # This is where step installs the cert when the client is bootstrapped.
+      - CERT_AUTH=${CERT_AUTH:-localhost}
+      - CERT_AUTH_PORT=${CERT_AUTH_PORT:-8443}
+      - CERT_AUTH_PROVISIONER=${CERT_AUTH_PROVISIONER:-acme}
+      - FINGERPRINT=${FINGERPRINT}
   hello-world:
     image: praqma/hello-world:spring-boot-${HELLOWORLD_VERSION}
     container_name: "hello-world"
