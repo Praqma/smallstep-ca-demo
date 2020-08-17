@@ -3,7 +3,7 @@
 set -euo pipefail
 
 step ca bootstrap --ca-url "${CERT_AUTH}:${CERT_AUTH_PORT}" --fingerprint "${FINGERPRINT}" --install
-unset "${FINGERPRINT}"
+unset "FINGERPRINT"
 
 update-ca-certificates
 
