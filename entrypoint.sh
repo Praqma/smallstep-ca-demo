@@ -18,7 +18,7 @@ if [ -f "${CONFIG_FILE}" ]; then
 else
   echo "No configuration file found at ${CONFIG_FILE}"
 
-  /usr/local/bin/step ca init --name "Default Internal Authority" --provisioner admin --dns "${DNS_NAMES}" --address ":8443" --password-file=${PASSWORD_FILE}
+  /usr/local/bin/step ca init --name "Smallstep Internal Authority" --provisioner admin --dns "${DNS_NAMES}" --address ":8443" --password-file=${PASSWORD_FILE}
 
   /usr/local/bin/step ca provisioner add acme --type ACME
 
