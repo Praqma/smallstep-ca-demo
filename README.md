@@ -1,8 +1,8 @@
-# Behind The Firewall CA Demo
+# Behind The Firewall Certificate Authority (CA) Demo
 
 The overall goal of this repository is to demonstrate automated SSL certificate **creation** and **renewal** for **behind the firewall** web services so that they can get that [LetsEncrypt](https://letsencrypt.org/) type of experience for automated deployments. **Specifically** for Continuous Integration and Continuous Delivery (CI/CD) situations where there are **hard security requirements** and there is **no access to the internet** from the internal network.
 
-## Why
+# Why
 For web applications, communicating over SSL/HTTPS is a must. Unencrypted traffic over HTTP is a security risk. 
 
 This is nothing new and it is hard to find a public web service in production which is not secured with SSL/HTTPS.
@@ -23,11 +23,11 @@ Development teams who practice CI/CD work at speed. Release cycles are frequent 
 
 In CI/CD the deployment process is automated. Having automated deployments and tests break while waiting for certificate renewal is not an option.
 
-## Approaches
+# Approaches
 
 The best way to ensure that any web service is running over HTTPS with a valid certificate is to make it as painless as possible and automated. When you deploy a web service it should just happen!
 
-[LetsEncrypt](https://letsencrypt.org/) made this possible for **public** web services using the Automated Certificate Management Environment ([ACME](https://en.wikipedia.org/wiki/Automated_Certificate_Management_Environment)) protocol. Basically, with the ACME protocol a client asks for a certificate, say helloworld.example.com, from a CA that supports the protocol. The CA will challenge the client to prove that it is who it says it is. If the challenge(s) are fulfilled a certificate is issued to the client. 
+[LetsEncrypt](https://letsencrypt.org/) made this possible for **public** web services using the Automated Certificate Management Environment ([ACME](https://en.wikipedia.org/wiki/Automated_Certificate_Management_Environment)) protocol. Basically, with the ACME protocol a client asks for a certificate, e.g. helloworld.example.com, from a CA that supports the protocol. The CA will challenge to prove ownership. If the challenge(s) are fulfilled a certificate is issued to the client. 
 
 There are two types of challenges, [HTTP-01](https://letsencrypt.org/docs/challenge-types/#http-01-challenge) and [DNS-01](https://letsencrypt.org/docs/challenge-types/#dns-01-challenge). 
 
@@ -35,9 +35,9 @@ There are two types of challenges, [HTTP-01](https://letsencrypt.org/docs/challe
 
 * With DNS-01 the CA wants you to prove control of your domain. In this case the CA expects a TXT record to be put under that domain name. The client is responsible for this. If successful and everything matches up the certificate is generated and the client retrieves it. This means you need a DNS provider that supports the protocol and control over the domain.
 
-In either case the client needs to retrive the certificate. So somewhere internet access is needed if you want to use LetsEncrypt.
+In either case the client needs to retrive the certificate. So somewhere internet access is needed if you want to use [LetsEncrypt](https://letsencrypt.org/).
 
-### Limited Access
+## Limited Access
 
 If you have **limited** access to the internet you could do something like.
 
@@ -45,11 +45,11 @@ If you have **limited** access to the internet you could do something like.
 * One publicly exposed ACME client. Certbot, ACME.sh, etc. Which uses DNS-01 challenge.
 * A way to distribute the certs from exposed ACME client to the internal hosts so they can be used by Nginx, Apache2, Traefik, etc.
 
-### Zero Access
+## Zero Access
 
 If you have zero access to the internet then your only option is to run an internal CA and distribute the root and intermediate certificates to **all** the hosts on the internal network. 
 
-## Solution
+# Solution
 The solution I chose is a full Certificate Authority on the internal network. 
 
 * A lot of companies already have internal certificates they distribute to hosts on the internal network. The only piece that is missing is the ACME support. If they don't know how to do this then it is not hard as it is pretty standard.
@@ -68,6 +68,58 @@ I have dockerized the CA and created docker-compose file to easily spin it up. T
 
 I have also dockerized and created docker-compose files for two proxies (Nginx and Traefik) to demonstrate how to get certificate generation and renewal for a simple hello world web service.
 
-I chose Traefik because it has built in support for ACME. You just need to configure the compose file with the proper values (CA, challemńge type, etc) and Traefik will handle everything including certificate renewal.
+I chose Traefik because it has built in support for ACME. You just need to configure the compose file with the proper values (CA, challenge type, etc) and Traefik will handle everything including certificate renewal.
 
-I chose Nginx because it **doesn't** have built in support for ACME. Smallstep also provides an ACME client which supports certifcate generation and renewal. I baked this into the Nginx image and created an entrypoint script to get the certificate generated and run the renewal daemon. The Nginx configuration just references the certificates that the Amallstep ACME client handles. 
+I chose Nginx because it **doesn't** have built in support for ACME. Smallstep also provides an ACME client which supports certifcate generation and renewal. I baked this into the Nginx image and created an entrypoint script to get the certificate generated and run the renewal daemon. The Nginx configuration just references the certificates that the Smallstep ACME client generates and renews. 
+
+## Quick Start
+
+1. Clone this repository and change directory into it.
+
+    Add the follwoing to your /etc/hosts file. 
+
+    ``` 
+    127.0.0.1	helloworld.thedukedk.net
+    127.0.0.1	internalCA.thedukedk.net
+    ``` 
+
+2. Run `docker-compose up -d`
+
+3. Get the fingerprint from the CA by doing a `docker logs step-ca`.
+
+    ``` 
+    docker logs step-ca 
+
+    No configuration file found at /home/step/config/ca.json
+
+    Generating root certificate... 
+    all done!
+
+    Generating intermediate certificate... 
+    all done!
+
+    ✔ Root certificate: /home/step/certs/root_ca.crt
+    ✔ Root private key: /home/step/secrets/root_ca_key
+    ✔ Root fingerprint: 17096d30163602c2743f10032126f6a09a71cc0ea023879d980584cd4870c5f3  <---------------
+    ✔ Intermediate certificate: /home/step/certs/intermediate_ca.crt
+    ✔ Intermediate private key: /home/step/secrets/intermediate_ca_key
+    ✔ Database folder: /home/step/db
+    ✔ Default configuration: /home/step/config/defaults.json
+    ✔ Certificate Authority configuration: /home/step/config/ca.json
+
+    Your PKI is ready to go. To generate certificates for individual services see 'step help ca'.
+    ``` 
+
+    Add it to the FINGERPRINT environment variable in the `.env` file.
+
+4. Copy the root and intermediate certificates from the container to your host and add them to the hosts trust store. This is something that would normally be handled by It operations. For my Fedora laptop I copy them to `/etc/pki/ca-trust/source/anchors` and run the command `update-ca-trust`. This is different for different OS's and dsitributions.
+
+5. Run one of the proxies to see the generated certificate.
+
+    For Traefik - `docker-compose -f demos/traefik/traefik-compose.yaml up -d`
+
+    The certificate can be found in the `acme.json` file. E.g. `docker exec traefik bash -c "cat acme.json"`
+
+    For Nginx - `docker-compose -f demos/nginx/nginx-compose.yaml up -d`
+
+    The certificate can be found in the `/acme-certificates` directory. E.g. `docker exec nginx bash -c "ls /acme-certificates"`
