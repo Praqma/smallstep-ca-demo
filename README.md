@@ -116,10 +116,10 @@ I chose Nginx because it **doesn't** have built in support for ACME. Smallstep a
 
 5. Run one of the proxies to see the generated certificate.
 
-    For Traefik - `docker-compose -f demos/traefik/traefik-compose.yaml up -d`
+    For Traefik - `docker-compose -f clients/traefik/traefik-compose.yaml up -d`
 
     The certificate can be found in the `acme.json` file. E.g. `docker exec traefik bash -c "cat acme.json"`
 
-    For Nginx - `docker-compose -f demos/nginx/nginx-compose.yaml up -d`
+    For Nginx - `docker-compose -f clients/nginx/nginx-compose.yaml up -d`
 
     The certificate can be found in the `/acme-certificates` directory. E.g. `docker exec nginx bash -c "ls /acme-certificates"`
