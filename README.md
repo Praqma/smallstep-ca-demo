@@ -47,7 +47,7 @@ If you have **limited** access to the internet you could do something like.
 
 ![Simplified DNS-01](Simplified-DNS-01.png)
 
-The above image *roughly* demonstrates how the DNS-01 challenge could be used in this scenario. The ACME client requests a certificate. It is given a token by the CA (LetsEncrypt). It then provisions a TXT record with the token which is concatenated with the thumbprint of the authorization key to create the TXT file on the DNS. Once this is done then it tells the CA the challenge has been met. The CA then makes a DNS lookup and retrieves the record. If all is good the the agent can then retrieve the certificate, which it must distribute as necessary for use by web services.
+The above image *roughly* demonstrates how the DNS-01 challenge could be used in this scenario. The ACME client requests a certificate. It is given a token by the CA (LetsEncrypt). It then provisions a TXT record with the token, which is concatenated with the thumbprint of the authorization key, to create the TXT file on the DNS. Once this is done then it tells the CA the challenge has been met. The CA then makes a DNS lookup and retrieves the record. If all is good the client can then retrieve the certificate, which it must distribute as necessary for use by web services.
 
 ## Zero Access
 
@@ -62,14 +62,18 @@ All you really need is.
 * A CA which supports ACME.
 * The root and/or intermediate certificates distributed to the trust store of the hosts on the internal network.
 
+![Simplified HTTP-01](Simplified-HTTP-01.png)
+
+The above image *roughly* demonstrates how the HTTP-01 challenge could be used in this scenario. The ACME client requests a certificate. It is given a token by the internal CA. It then puts a file with the token, which is concatenated with the thumbprint of the authorization key, at `http://<YOUR_DOMAIN>/.well-known/acme-challenge/<TOKEN>` on the server. Once this is done then it tells the CA the challenge has been met. The CA then tries retrieving it. If all is good the agent can then retrieve the certificate.
+
 # Solution
 The solution I chose is a full Certificate Authority on the internal network. 
 
 * A lot of companies already have internal certificates they distribute to hosts on the internal network. The only piece that is missing is the ACME support.
 
-* Distributing the certificates (rsync often) from one exposed ACME client to the hosts that needs them is just an added complexity.
+* Distributing the certificates from one exposed ACME client to the hosts that needs them is just an added complexity.
 
-* There is a Certificate Authority (CA), provided by [Smallstep](https://github.com/smallstep/certificates), which supports the [ACME](https://en.wikipedia.org/wiki/Automated_Certificate_Management_Environment) protocol. It is **open source**, lightweight, and provides multiple ways to provision and manage certificates. 
+* There is a CA, provided by [Smallstep](https://github.com/smallstep/certificates), which supports the [ACME](https://en.wikipedia.org/wiki/Automated_Certificate_Management_Environment) protocol. It is **open source**, lightweight, and provides multiple ways to provision and manage certificates. 
 
 * The Smallstep CA was built for DevOps and Modern Systems. It can packaged into a container, run on a K8's cluster, automated with provisioning tools like Chef, Ansible, Puppet, etc.
 
