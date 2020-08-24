@@ -73,9 +73,11 @@ The solution I chose is a full Certificate Authority on the internal network.
 
 * Distributing the certificates from one exposed ACME client to the hosts that needs them is just an added complexity.
 
-* There is a CA, provided by [Smallstep](https://github.com/smallstep/certificates), which supports the [ACME](https://en.wikipedia.org/wiki/Automated_Certificate_Management_Environment) protocol. It is **open source**, lightweight, and provides multiple ways to provision and manage certificates. 
+* There is a CA, provided by [Smallstep](https://github.com/smallstep/certificates), which supports the [ACME](https://en.wikipedia.org/wiki/Automated_Certificate_Management_Environment) protocol. It is **open source**, light weight, and provides multiple ways to provision and manage certificates. 
 
 * The Smallstep CA was built for DevOps and Modern Systems. It can packaged into a container, run on a K8's cluster, automated with provisioning tools like Chef, Ansible, Puppet, etc.
+
+* The internal CA solution is inherently more secure as nothing needs to be exposed to the internet.
 
 # Demo(s)
 
@@ -136,7 +138,7 @@ I chose Nginx because it **doesn't** have built in support for ACME. Smallstep a
 
     Add it to the FINGERPRINT environment variable in the `.env` file.
 
-4. Copy the root and intermediate certificates from the container to your host and add them to the hosts trust store. This is something that would normally be handled by It operations. For my Fedora laptop I copy them to `/etc/pki/ca-trust/source/anchors` and run the command `update-ca-trust`. This is different for different OS's and dsitributions.
+4. Copy the root and intermediate certificates from the container to your host and add them to the hosts trust store. This is something that would normally be handled by ITOP's. For my Fedora laptop I copy them to `/etc/pki/ca-trust/source/anchors` and run the command `update-ca-trust`. This is different for different OS's and dsitributions.
 
 5. Run one of the proxies to see the generated certificate.
 
@@ -147,3 +149,13 @@ I chose Nginx because it **doesn't** have built in support for ACME. Smallstep a
     For Nginx - `docker-compose -f clients/nginx/nginx-compose.yaml up -d`
 
     The certificate can be found in the `/acme-certificates` directory. E.g. `docker exec nginx bash -c "ls /acme-certificates"`
+
+# Summary
+
+It **is possible** to get automated certificate management for your `dev`, `test`, `QA`, `staging` environments when you are behind the firewall. I used Traefik and Nginx in this demo. But there are lots of ACME clients now. Certbot, Caddy, step-cli from Smallstep, acme.sh, etc. If you want to go down that road, there are even libraries for doing it programmatically.
+
+I would suggest that you invest the time in an internal CA which supports ACME. 
+
+* It is, obviosuly, more secure. So the security guys will be happy. 
+* ITOP's doesn't have to use time manually handling certificates for internal web services.
+* Developers can automate the whole process and not give it much thought as it fits well with a CI/CD approach.
