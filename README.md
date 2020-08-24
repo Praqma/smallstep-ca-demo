@@ -53,22 +53,29 @@ The above image *roughly* demonstrates how the DNS-01 challenge could be used in
 
 If you have zero access to the internet then your only option is to run an internal CA and distribute the root and intermediate certificates to **all** the hosts on the internal network. 
 
-The same is true if you do **not** want to publish internal domains publicly or you do **not** directly control the DNS and can not add the TXT record in an automated way.
+The same is true if you do **not** want to publish internal domains publicly or you do **not** directly control the DNS and can **not** add the TXT record in an automated way.
+
+With an internal CA the web services can use the HTTP-01 challenge. It is a bit simpler as there is no DNS provider involved. Instead the file that contains the token, concatenated with the thumbprint of the authorization key, is stored on the server requesting the certificate. The CA will retrieve the file from the server.
+
+All you really need is.
+
+* A CA which supports ACME.
+* The root and/or intermediate certificates distributed to the trust store of the hosts on the internal network.
 
 # Solution
 The solution I chose is a full Certificate Authority on the internal network. 
 
 * A lot of companies already have internal certificates they distribute to hosts on the internal network. The only piece that is missing is the ACME support.
 
-* This allows HTTP-01 challenge which is simpler. Does not require making an internal domain public and does not require a DNS provider that supports the ACME protocol.
-
 * Distributing the certificates (rsync often) from one exposed ACME client to the hosts that needs them is just an added complexity.
+
+* There is a Certificate Authority (CA), provided by [Smallstep](https://github.com/smallstep/certificates), which supports the [ACME](https://en.wikipedia.org/wiki/Automated_Certificate_Management_Environment) protocol. It is **open source**, lightweight, and provides multiple ways to provision and manage certificates. 
+
+* The Smallstep CA was built for DevOps and Modern Systems. It can packaged into a container, run on a K8's cluster, automated with provisioning tools like Chef, Ansible, Puppet, etc.
 
 # Demo(s)
 
-The demo(s) in this repository use a Certificate Authority (CA), provided by [Smallstep](https://github.com/smallstep/certificates), which supports the [ACME](https://en.wikipedia.org/wiki/Automated_Certificate_Management_Environment) protocol.
-
-Kudos to [Smallstep](https://smallstep.com/) for providing their CA as an **open source** implementation. I encourage you to take a look at there website and see what they have going on.
+First off. Kudos to [Smallstep](https://smallstep.com/) for providing their CA as an **open source** implementation. I encourage you to take a look at there website and see what they have going on.
 
 I have dockerized the CA and created docker-compose file to easily spin it up. There is an entrypoint script to initialize the CA with some values defined in a `.env` file. 
 
