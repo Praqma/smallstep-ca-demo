@@ -156,6 +156,8 @@ It **is possible** to get automated certificate management for your `dev`, `test
 
 I would suggest that you invest the time in an internal CA which supports ACME. 
 
-* It is, obviosuly, more secure. So the security guys will be happy. 
-* ITOP's doesn't have to use time manually handling certificates for internal web services.
-* Developers can automate the whole process and not give it much thought as it fits well with a CI/CD approach.
+* It is, obviously, more secure. So the security guys will be happier. 
+* ITOP's doesn't have to use time manually handling certificates for internal web services. They are happier.
+* Developers can automate the whole process and not give it much thought as it fits well with a CI/CD approach. Deployments and tests won't break due to out of date certificates. So they are happier.
+
+All in all, I see this as a win/win/win scenario :-)
