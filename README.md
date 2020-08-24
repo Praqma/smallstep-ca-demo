@@ -47,18 +47,22 @@ If you have **limited** access to the internet you could do something like.
 
 ![Simplified DNS-01](Simplified-DNS-01.png)
 
+The above image *roughly* demonstrates how the DNS-01 challenge could be used in this scenario. The ACME client requests a certificate. It is given a token by the CA (LetsEncrypt). It then provisions a TXT record with the token which is concatenated with the thumbprint of the authorization key to create the TXT file on the DNS. Once this is done then it tells the CA the challenge has been met. The CA then makes a DNS lookup and retrieves the record. If all is good the the agent can then retrieve the certificate, which it must distribute as necessary for use by web services.
+
 ## Zero Access
 
 If you have zero access to the internet then your only option is to run an internal CA and distribute the root and intermediate certificates to **all** the hosts on the internal network. 
 
+The same is true if you do **not** want to publish internal domains publicly or you do **not** directly control the DNS and can not add the TXT record in an automated way.
+
 # Solution
 The solution I chose is a full Certificate Authority on the internal network. 
 
-* A lot of companies already have internal certificates they distribute to hosts on the internal network. The only piece that is missing is the ACME support. If they don't know how to do this then it is not hard as it is pretty standard.
+* A lot of companies already have internal certificates they distribute to hosts on the internal network. The only piece that is missing is the ACME support.
 
 * This allows HTTP-01 challenge which is simpler. Does not require making an internal domain public and does not require a DNS provider that supports the ACME protocol.
 
-* Finally distributing the certificates (rsync often) from one exposed ACME client to the hosts that needs them is just an added complexity.
+* Distributing the certificates (rsync often) from one exposed ACME client to the hosts that needs them is just an added complexity.
 
 # Demo(s)
 
