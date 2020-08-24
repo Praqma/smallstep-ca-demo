@@ -96,6 +96,13 @@ I chose Nginx because it **doesn't** have built in support for ACME. Smallstep a
     127.0.0.1	internalCA.thedukedk.net
     ``` 
 
+    **NOTE:** You can change the above values to anything you want. Just be sure to change the following environment variables in the `.env` file to match. 
+
+    ``` 
+    SERVER_PROXY_NAME
+    DNS_NAMES
+    ``` 
+
 2. Run `docker-compose up -d`
 
 3. Get the fingerprint from the CA by doing a `docker logs step-ca`.
