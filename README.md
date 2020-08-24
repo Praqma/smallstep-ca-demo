@@ -31,9 +31,9 @@ The best way to ensure that any web service is running over HTTPS with a valid c
 
 There are two types of challenges, [HTTP-01](https://letsencrypt.org/docs/challenge-types/#http-01-challenge) and [DNS-01](https://letsencrypt.org/docs/challenge-types/#dns-01-challenge). 
 
-* With HTTPS-01 the client puts a file locally with a token given by the CA. The CA then retrieves the file. If successful and everything matches up properly then a certificate is generated which the client retrieves. Port 80 **must** be open on the client side.
+* With HTTP-01 the client puts a file locally with a token given by the CA. The CA then retrieves the file. If successful and everything matches up properly then a certificate is generated which the client retrieves. Port 80 **must** be open on the client side.
 
-* With DNS-01 the CA wants you to prove control of your domain. In this case the CA expects a TXT record to be put under that domain name. The client is responsible for this. If successful and everything matches up the certificate is generated and the client retrieves it. This means you need a DNS provider that supports the protocol and control over the domain.
+* With DNS-01 the CA wants you to prove control of your domain. In this case the CA expects a TXT record to be put under that domain name. The client is responsible for this. If successful and everything matches up the certificate is generated and the client retrieves it. This means you need to have control over the domain and a DNS provider that supports the ACME protocol.
 
 In either case the client needs to retrive the certificate. So somewhere internet access is needed if you want to use [LetsEncrypt](https://letsencrypt.org/).
 
@@ -44,6 +44,8 @@ If you have **limited** access to the internet you could do something like.
 * A publicly registered domain. E.G. mydomain.net on Route53 or some other DNS provider with ACME support for example.
 * One publicly exposed ACME client. Certbot, ACME.sh, etc. Which uses DNS-01 challenge.
 * A way to distribute the certs from exposed ACME client to the internal hosts so they can be used by Nginx, Apache2, Traefik, etc.
+
+![Simplified DNS-01](Simplified-DNS-01.png)
 
 ## Zero Access
 
