@@ -63,6 +63,15 @@ I chose Nginx because it **doesn't** have built in support for ACME. Smallstep a
 
     **NOTE:** You can change the above values to anything you want. Just be sure to change the `SERVER_PROXY_NAME` and `DNS_NAMES` environment variables in the `.env` file to match, along with  `certificatesresolvers` on line 17 of the [traefik-compose.yaml file](clients/traefik/traefik-compose.yaml).
 
+<<<<<<< HEAD
+=======
+    ``` 
+    SERVER_PROXY_NAME
+    DNS_NAMES
+    ``` 
+    
+    You'll also need to change the CA hostname, in `clients/traefik/traefik-compose.yaml`
+>>>>>>> 65fb7cd581a07fa8cd443b3c81e5402db7f0e4a0
 
 2. Run `docker-compose up -d`
 
@@ -91,7 +100,7 @@ I chose Nginx because it **doesn't** have built in support for ACME. Smallstep a
     Your PKI is ready to go. To generate certificates for individual services see 'step help ca'.
     ``` 
 
-    Add it to the FINGERPRINT environment variable in the `.env` file.
+    Add it to the `FINGERPRINT` environment variable in the `.env` file.
 
 4. Copy the root and intermediate certificates from the container to your host and add them to the hosts trust store. Just exec into the ca container and look under the `certs` directory. This is something that would normally be handled by ITOP's. For my Fedora laptop I copy them to `/etc/pki/ca-trust/source/anchors` and run the command `update-ca-trust`. This is different for different OS's and dsitributions.
 
