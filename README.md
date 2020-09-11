@@ -23,53 +23,12 @@ Development teams who practice CI/CD work at speed. Release cycles are frequent 
 
 In CI/CD the deployment process is automated. Having automated deployments and tests break while waiting for certificate renewal is not an option.
 
-# Approaches
-
+# Solution
 The best way to ensure that any web service is running over HTTPS with a valid certificate is to make it as painless as possible and automated. When you deploy a web service it should just happen!
 
-[LetsEncrypt](https://letsencrypt.org/) made this possible for **public** web services using the Automated Certificate Management Environment ([ACME](https://en.wikipedia.org/wiki/Automated_Certificate_Management_Environment)) protocol. Basically, with the ACME protocol a client asks for a certificate, e.g. helloworld.example.com, from a CA that supports the protocol. The CA will challenge to prove ownership. If the challenge(s) are fulfilled a certificate is issued to the client. 
+The solution demo here is a full Certificate Authority on the internal network using Smallstep's CA. 
 
-There are two types of challenges, [HTTP-01](https://letsencrypt.org/docs/challenge-types/#http-01-challenge) and [DNS-01](https://letsencrypt.org/docs/challenge-types/#dns-01-challenge). 
-
-* With HTTP-01 the client puts a file locally with a token given by the CA. The CA then retrieves the file. If successful and everything matches up properly then a certificate is generated which the client retrieves. Port 80 **must** be open on the client side.
-
-* With DNS-01 the CA wants you to prove control of your domain. In this case the CA expects a TXT record to be put under that domain name. The client is responsible for this. If successful and everything matches up the certificate is generated and the client retrieves it. This means you need to have control over the domain and a DNS provider that supports the ACME protocol.
-
-In either case the client needs to retrive the certificate. So somewhere internet access is needed if you want to use [LetsEncrypt](https://letsencrypt.org/).
-
-## Limited Access
-
-If you have **limited** access to the internet you could do something like.
-
-* A publicly registered domain. E.G. mydomain.net on Route53 or some other DNS provider with ACME support for example.
-* One publicly exposed ACME client. Certbot, ACME.sh, etc. Which uses DNS-01 challenge.
-* A way to distribute the certs from exposed ACME client to the internal hosts so they can be used by Nginx, Apache2, Traefik, etc.
-
-![Simplified DNS-01](Simplified-DNS-01.png)
-
-The above image *roughly* demonstrates how the DNS-01 challenge could be used in this scenario. The ACME client requests a certificate. It is given a token by the CA (LetsEncrypt). It then provisions a TXT record with the token, which is concatenated with the thumbprint of the authorization key, to create the TXT file on the DNS. Once this is done then it tells the CA the challenge has been met. The CA then makes a DNS lookup and retrieves the record. If all is good the client can then retrieve the certificate, which it must distribute as necessary for use by web services.
-
-## Zero Access
-
-If you have zero access to the internet then your only option is to run an internal CA and distribute the root and intermediate certificates to **all** the hosts on the internal network. 
-
-The same is true if you do **not** want to publish internal domains publicly or you do **not** directly control the DNS and can **not** add the TXT record in an automated way.
-
-With an internal CA the web services can use the HTTP-01 challenge. It is a bit simpler as there is no DNS provider involved. Instead the file that contains the token, concatenated with the thumbprint of the authorization key, is stored on the server requesting the certificate. The CA will retrieve the file from the server.
-
-All you really need is.
-
-* A CA which supports ACME.
-* The root and/or intermediate certificates distributed to the trust store of the hosts on the internal network.
-
-![Simplified HTTP-01](Simplified-HTTP-01.png)
-
-The above image *roughly* demonstrates how the HTTP-01 challenge could be used in this scenario. The ACME client requests a certificate. It is given a token by the internal CA. It then puts a file with the token, which is concatenated with the thumbprint of the authorization key, at `http://<YOUR_DOMAIN>/.well-known/acme-challenge/<TOKEN>` on the server. Once this is done then it tells the CA the challenge has been met. The CA then tries retrieving it. If all is good the agent can then retrieve the certificate.
-
-# Solution
-The solution I chose is a full Certificate Authority on the internal network. 
-
-* A lot of companies already have internal certificates they distribute to hosts on the internal network. The only piece that is missing is the ACME support.
+* A lot of companies already have internal certificates they distribute to hosts on the internal network. The only piece that is missing is the ACME support. You can import existing root certificates into Smallsteps CA if needed.
 
 * Distributing the certificates from one exposed ACME client to the hosts that needs them is just an added complexity.
 
@@ -102,12 +61,8 @@ I chose Nginx because it **doesn't** have built in support for ACME. Smallstep a
     127.0.0.1	internalCA.thedukedk.net
     ``` 
 
-    **NOTE:** You can change the above values to anything you want. Just be sure to change the following environment variables in the `.env` file to match. 
+    **NOTE:** You can change the above values to anything you want. Just be sure to change the `SERVER_PROXY_NAME` and `DNS_NAMES` environment variables in the `.env` file to match, along with  `certificatesresolvers` on line 17 of the [traefik-compose.yaml file](clients/traefik/traefik-compose.yaml).
 
-    ``` 
-    SERVER_PROXY_NAME
-    DNS_NAMES
-    ``` 
 
 2. Run `docker-compose up -d`
 
@@ -138,7 +93,7 @@ I chose Nginx because it **doesn't** have built in support for ACME. Smallstep a
 
     Add it to the FINGERPRINT environment variable in the `.env` file.
 
-4. Copy the root and intermediate certificates from the container to your host and add them to the hosts trust store. This is something that would normally be handled by ITOP's. For my Fedora laptop I copy them to `/etc/pki/ca-trust/source/anchors` and run the command `update-ca-trust`. This is different for different OS's and dsitributions.
+4. Copy the root and intermediate certificates from the container to your host and add them to the hosts trust store. Just exec into the ca container and look under the `certs` directory. This is something that would normally be handled by ITOP's. For my Fedora laptop I copy them to `/etc/pki/ca-trust/source/anchors` and run the command `update-ca-trust`. This is different for different OS's and dsitributions.
 
 5. Run one of the proxies to see the generated certificate.
 
