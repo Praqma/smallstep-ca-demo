@@ -63,16 +63,6 @@ I chose Nginx because it **doesn't** have built in support for ACME. Smallstep a
 
     **NOTE:** You can change the above values to anything you want. Just be sure to change the `SERVER_PROXY_NAME` and `DNS_NAMES` environment variables in the `.env` file to match, along with  `certificatesresolvers` on line 17 of the [traefik-compose.yaml file](clients/traefik/traefik-compose.yaml).
 
-<<<<<<< HEAD
-=======
-    ``` 
-    SERVER_PROXY_NAME
-    DNS_NAMES
-    ``` 
-    
-    You'll also need to change the CA hostname, in `clients/traefik/traefik-compose.yaml`
->>>>>>> 65fb7cd581a07fa8cd443b3c81e5402db7f0e4a0
-
 2. Run `docker-compose up -d`
 
 3. Get the fingerprint from the CA by doing a `docker logs step-ca`.
