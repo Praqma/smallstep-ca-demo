@@ -92,7 +92,11 @@ I chose Nginx because it **doesn't** have built in support for ACME. Smallstep a
 
     Add it to the `FINGERPRINT` environment variable in the `.env` file.
 
-4. Copy the root and intermediate certificates from the container to your host and add them to the hosts trust store. Just exec into the ca container and look under the `certs` directory. This is something that would normally be handled by ITOP's. For my Fedora laptop I copy them to `/etc/pki/ca-trust/source/anchors` and run the command `update-ca-trust`. This is different for different OS's and dsitributions.
+4. Copy the root and intermediate certificates from the container to your host and add them to the hosts trust store. I installed Smallstep's CLI on my host and used it to install the certificates in my computers trust store. It packs them into a .pem file for me so I do not have to do this myself.
+
+    `step-cli ca bootstrap --ca-url https://internalCA.thedukedk.net:8443 --fingerprint <FINGERPRINT HERE> --install`
+
+    This is something that would normally be handled by ITOP's and is different for OS's and dsitributions. So you will need to look it up for your OS and distribution.
 
 5. Run one of the proxies to see the generated certificate.
 
